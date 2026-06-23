@@ -204,12 +204,12 @@ void handle_stream()
   }
 
   log_v("starting streaming");
-  // Blocks further handling of HTTP server until stopped
   char size_buf[12];
   auto client = web_server.client();
   client.write("HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: multipart/x-mixed-replace; boundary=" STREAM_CONTENT_BOUNDARY "\r\n");
   while (client.connected())
   {
+    yield();
     client.write("\r\n--" STREAM_CONTENT_BOUNDARY "\r\n");
     cam.run();
     client.write("Content-Type: image/jpeg\r\nContent-Length: ");
@@ -305,6 +305,99 @@ void update_camera_settings()
   camera->set_vflip(camera, param_vflip.value());
   camera->set_dcw(camera, param_dcw.value());
   camera->set_colorbar(camera, param_colorbar.value());
+}
+
+template <typename T, size_t N>
+int findOptionIndex(const T (&options)[N], const char *value)
+{
+  for (size_t i = 0; i < N; i++)
+  {
+    if (strncmp(options[i].name, value, sizeof(options[i].name)) == 0)
+      return i;
+  }
+  return 0;
+}
+
+void handle_api_config()
+{
+  log_v("handle_api_config");
+  web_server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  web_server.sendHeader("Content-Type", "application/json");
+
+  String json = "{";
+  json += "\"frame_duration\":" + String(param_frame_duration.value()) + ",";
+  json += "\"frame_size\":\"" + String(param_frame_size.value()) + "\",";
+  json += "\"frame_size_index\":" + String(findOptionIndex(frame_sizes, param_frame_size.value())) + ",";
+  json += "\"jpg_quality\":" + String(param_jpg_quality.value()) + ",";
+  json += "\"brightness\":" + String(param_brightness.value()) + ",";
+  json += "\"contrast\":" + String(param_contrast.value()) + ",";
+  json += "\"saturation\":" + String(param_saturation.value()) + ",";
+  json += "\"special_effect\":\"" + String(param_special_effect.value()) + "\",";
+  json += "\"special_effect_index\":" + String(findOptionIndex(camera_effects, param_special_effect.value())) + ",";
+  json += "\"whitebal\":" + String(param_whitebal.value() ? "true" : "false") + ",";
+  json += "\"awb_gain\":" + String(param_awb_gain.value() ? "true" : "false") + ",";
+  json += "\"wb_mode\":\"" + String(param_wb_mode.value()) + "\",";
+  json += "\"wb_mode_index\":" + String(findOptionIndex(camera_wb_modes, param_wb_mode.value())) + ",";
+  json += "\"exposure_ctrl\":" + String(param_exposure_ctrl.value() ? "true" : "false") + ",";
+  json += "\"aec2\":" + String(param_aec2.value() ? "true" : "false") + ",";
+  json += "\"ae_level\":" + String(param_ae_level.value()) + ",";
+  json += "\"aec_value\":" + String(param_aec_value.value()) + ",";
+  json += "\"gain_ctrl\":" + String(param_gain_ctrl.value() ? "true" : "false") + ",";
+  json += "\"agc_gain\":" + String(param_agc_gain.value()) + ",";
+  json += "\"gain_ceiling\":\"" + String(param_gain_ceiling.value()) + "\",";
+  json += "\"gain_ceiling_index\":" + String(findOptionIndex(camera_gain_ceilings, param_gain_ceiling.value())) + ",";
+  json += "\"bpc\":" + String(param_bpc.value() ? "true" : "false") + ",";
+  json += "\"wpc\":" + String(param_wpc.value() ? "true" : "false") + ",";
+  json += "\"raw_gma\":" + String(param_raw_gma.value() ? "true" : "false") + ",";
+  json += "\"lenc\":" + String(param_lenc.value() ? "true" : "false") + ",";
+  json += "\"hmirror\":" + String(param_hmirror.value() ? "true" : "false") + ",";
+  json += "\"vflip\":" + String(param_vflip.value() ? "true" : "false") + ",";
+  json += "\"dcw\":" + String(param_dcw.value() ? "true" : "false") + ",";
+  json += "\"colorbar\":" + String(param_colorbar.value() ? "true" : "false");
+  json += "}";
+
+  web_server.send(200, "application/json", json);
+}
+
+void handle_api_config_save()
+{
+  log_v("handle_api_config_save");
+  if (camera_init_result != ESP_OK)
+  {
+    web_server.send(400, "application/json", "{\"success\":false,\"error\":\"Camera not initialized\"}");
+    return;
+  }
+
+  if (web_server.hasArg("fd")) param_frame_duration.value() = web_server.arg("fd").toInt();
+  if (web_server.hasArg("fs")) { strncpy(param_frame_size.value(), web_server.arg("fs").c_str(), sizeof(param_frame_size.value()) - 1); param_frame_size.value()[sizeof(param_frame_size.value()) - 1] = '\0'; }
+  if (web_server.hasArg("q")) param_jpg_quality.value() = (byte)web_server.arg("q").toInt();
+  if (web_server.hasArg("b")) param_brightness.value() = (int8_t)web_server.arg("b").toInt();
+  if (web_server.hasArg("c")) param_contrast.value() = (int8_t)web_server.arg("c").toInt();
+  if (web_server.hasArg("s")) param_saturation.value() = (int8_t)web_server.arg("s").toInt();
+  if (web_server.hasArg("e")) { strncpy(param_special_effect.value(), web_server.arg("e").c_str(), sizeof(param_special_effect.value()) - 1); param_special_effect.value()[sizeof(param_special_effect.value()) - 1] = '\0'; }
+  if (web_server.hasArg("wb")) param_whitebal.value() = (web_server.arg("wb") == "1");
+  if (web_server.hasArg("awbg")) param_awb_gain.value() = (web_server.arg("awbg") == "1");
+  if (web_server.hasArg("wbm")) { strncpy(param_wb_mode.value(), web_server.arg("wbm").c_str(), sizeof(param_wb_mode.value()) - 1); param_wb_mode.value()[sizeof(param_wb_mode.value()) - 1] = '\0'; }
+  if (web_server.hasArg("ec")) param_exposure_ctrl.value() = (web_server.arg("ec") == "1");
+  if (web_server.hasArg("aec2")) param_aec2.value() = (web_server.arg("aec2") == "1");
+  if (web_server.hasArg("ael")) param_ae_level.value() = (int8_t)web_server.arg("ael").toInt();
+  if (web_server.hasArg("aecv")) param_aec_value.value() = (uint16_t)web_server.arg("aecv").toInt();
+  if (web_server.hasArg("gc")) param_gain_ctrl.value() = (web_server.arg("gc") == "1");
+  if (web_server.hasArg("agcg")) param_agc_gain.value() = (uint8_t)web_server.arg("agcg").toInt();
+  if (web_server.hasArg("gcl")) { strncpy(param_gain_ceiling.value(), web_server.arg("gcl").c_str(), sizeof(param_gain_ceiling.value()) - 1); param_gain_ceiling.value()[sizeof(param_gain_ceiling.value()) - 1] = '\0'; }
+  if (web_server.hasArg("bpc")) param_bpc.value() = (web_server.arg("bpc") == "1");
+  if (web_server.hasArg("wpc")) param_wpc.value() = (web_server.arg("wpc") == "1");
+  if (web_server.hasArg("rg")) param_raw_gma.value() = (web_server.arg("rg") == "1");
+  if (web_server.hasArg("lenc")) param_lenc.value() = (web_server.arg("lenc") == "1");
+  if (web_server.hasArg("hm")) param_hmirror.value() = (web_server.arg("hm") == "1");
+  if (web_server.hasArg("vm")) param_vflip.value() = (web_server.arg("vm") == "1");
+  if (web_server.hasArg("dcw")) param_dcw.value() = (web_server.arg("dcw") == "1");
+  if (web_server.hasArg("cb")) param_colorbar.value() = (web_server.arg("cb") == "1");
+
+  iotWebConf.saveConfig();
+  update_camera_settings();
+
+  web_server.send(200, "application/json", "{\"success\":true}");
 }
 
 void start_rtsp_server()
@@ -430,6 +523,10 @@ void setup()
   web_server.on("/snapshot", HTTP_GET, handle_snapshot);
   // Camera stream
   web_server.on("/stream", HTTP_GET, handle_stream);
+  // API: get config
+  web_server.on("/api/config", HTTP_GET, handle_api_config);
+  // API: save config
+  web_server.on("/api/config", HTTP_POST, handle_api_config_save);
 #ifdef FLASH_LED_GPIO
   // Flash led
   web_server.on("/flash", HTTP_GET, handle_flash);
