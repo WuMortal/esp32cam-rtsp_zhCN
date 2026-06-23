@@ -19,32 +19,32 @@
 // HTML files
 extern const char index_html_min_start[] asm("_binary_html_index_min_html_start");
 
-auto param_group_camera = iotwebconf::ParameterGroup("camera", "Camera settings");
-auto param_frame_duration = iotwebconf::Builder<iotwebconf::UIntTParameter<unsigned long>>("fd").label("Frame duration (ms)").defaultValue(DEFAULT_FRAME_DURATION).min(10).build();
-auto param_frame_size = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(frame_sizes[0])>>("fs").label("Frame size").optionValues((const char *)&frame_sizes).optionNames((const char *)&frame_sizes).optionCount(sizeof(frame_sizes) / sizeof(frame_sizes[0])).nameLength(sizeof(frame_sizes[0])).defaultValue(DEFAULT_FRAME_SIZE).build();
-auto param_jpg_quality = iotwebconf::Builder<iotwebconf::UIntTParameter<byte>>("q").label("JPG quality").defaultValue(DEFAULT_JPEG_QUALITY).min(1).max(100).build();
-auto param_brightness = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("b").label("Brightness").defaultValue(DEFAULT_BRIGHTNESS).min(-2).max(2).build();
-auto param_contrast = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("c").label("Contrast").defaultValue(DEFAULT_CONTRAST).min(-2).max(2).build();
-auto param_saturation = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("s").label("Saturation").defaultValue(DEFAULT_SATURATION).min(-2).max(2).build();
-auto param_special_effect = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(camera_effects[0])>>("e").label("Effect").optionValues((const char *)&camera_effects).optionNames((const char *)&camera_effects).optionCount(sizeof(camera_effects) / sizeof(camera_effects[0])).nameLength(sizeof(camera_effects[0])).defaultValue(DEFAULT_EFFECT).build();
-auto param_whitebal = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("wb").label("White balance").defaultValue(DEFAULT_WHITE_BALANCE).build();
-auto param_awb_gain = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("awbg").label("Automatic white balance gain").defaultValue(DEFAULT_WHITE_BALANCE_GAIN).build();
-auto param_wb_mode = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(camera_wb_modes[0])>>("wbm").label("White balance mode").optionValues((const char *)&camera_wb_modes).optionNames((const char *)&camera_wb_modes).optionCount(sizeof(camera_wb_modes) / sizeof(camera_wb_modes[0])).nameLength(sizeof(camera_wb_modes[0])).defaultValue(DEFAULT_WHITE_BALANCE_MODE).build();
-auto param_exposure_ctrl = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("ec").label("Exposure control").defaultValue(DEFAULT_EXPOSURE_CONTROL).build();
-auto param_aec2 = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("aec2").label("Auto exposure (dsp)").defaultValue(DEFAULT_AEC2).build();
-auto param_ae_level = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("ael").label("Auto Exposure level").defaultValue(DEFAULT_AE_LEVEL).min(-2).max(2).build();
-auto param_aec_value = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("aecv").label("Manual exposure value").defaultValue(DEFAULT_AEC_VALUE).min(9).max(1200).build();
-auto param_gain_ctrl = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("gc").label("Gain control").defaultValue(DEFAULT_GAIN_CONTROL).build();
-auto param_agc_gain = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("agcg").label("AGC gain").defaultValue(DEFAULT_AGC_GAIN).min(0).max(30).build();
-auto param_gain_ceiling = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(camera_gain_ceilings[0])>>("gcl").label("Auto Gain ceiling").optionValues((const char *)&camera_gain_ceilings).optionNames((const char *)&camera_gain_ceilings).optionCount(sizeof(camera_gain_ceilings) / sizeof(camera_gain_ceilings[0])).nameLength(sizeof(camera_gain_ceilings[0])).defaultValue(DEFAULT_GAIN_CEILING).build();
-auto param_bpc = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("bpc").label("Black pixel correct").defaultValue(DEFAULT_BPC).build();
-auto param_wpc = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("wpc").label("White pixel correct").defaultValue(DEFAULT_WPC).build();
-auto param_raw_gma = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("rg").label("Gamma correct").defaultValue(DEFAULT_RAW_GAMMA).build();
-auto param_lenc = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("lenc").label("Lens correction").defaultValue(DEFAULT_LENC).build();
-auto param_hmirror = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("hm").label("Horizontal mirror").defaultValue(DEFAULT_HORIZONTAL_MIRROR).build();
-auto param_vflip = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("vm").label("Vertical mirror").defaultValue(DEFAULT_VERTICAL_MIRROR).build();
-auto param_dcw = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("dcw").label("Downsize enable").defaultValue(DEFAULT_DCW).build();
-auto param_colorbar = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("cb").label("Colorbar").defaultValue(DEFAULT_COLORBAR).build();
+auto param_group_camera = iotwebconf::ParameterGroup("camera", "摄像头设置");
+auto param_frame_duration = iotwebconf::Builder<iotwebconf::UIntTParameter<unsigned long>>("fd").label("帧间隔 (ms)").defaultValue(DEFAULT_FRAME_DURATION).min(10).build();
+auto param_frame_size = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(frame_sizes[0])>>("fs").label("分辨率").optionValues((const char *)&frame_sizes).optionNames((const char *)&frame_sizes).optionCount(sizeof(frame_sizes) / sizeof(frame_sizes[0])).nameLength(sizeof(frame_sizes[0])).defaultValue(DEFAULT_FRAME_SIZE).build();
+auto param_jpg_quality = iotwebconf::Builder<iotwebconf::UIntTParameter<byte>>("q").label("JPEG 质量").defaultValue(DEFAULT_JPEG_QUALITY).min(1).max(100).build();
+auto param_brightness = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("b").label("亮度").defaultValue(DEFAULT_BRIGHTNESS).min(-2).max(2).build();
+auto param_contrast = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("c").label("对比度").defaultValue(DEFAULT_CONTRAST).min(-2).max(2).build();
+auto param_saturation = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("s").label("饱和度").defaultValue(DEFAULT_SATURATION).min(-2).max(2).build();
+auto param_special_effect = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(camera_effects[0])>>("e").label("特效").optionValues((const char *)&camera_effects).optionNames((const char *)&camera_effects).optionCount(sizeof(camera_effects) / sizeof(camera_effects[0])).nameLength(sizeof(camera_effects[0])).defaultValue(DEFAULT_EFFECT).build();
+auto param_whitebal = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("wb").label("白平衡").defaultValue(DEFAULT_WHITE_BALANCE).build();
+auto param_awb_gain = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("awbg").label("自动白平衡增益").defaultValue(DEFAULT_WHITE_BALANCE_GAIN).build();
+auto param_wb_mode = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(camera_wb_modes[0])>>("wbm").label("白平衡模式").optionValues((const char *)&camera_wb_modes).optionNames((const char *)&camera_wb_modes).optionCount(sizeof(camera_wb_modes) / sizeof(camera_wb_modes[0])).nameLength(sizeof(camera_wb_modes[0])).defaultValue(DEFAULT_WHITE_BALANCE_MODE).build();
+auto param_exposure_ctrl = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("ec").label("曝光控制").defaultValue(DEFAULT_EXPOSURE_CONTROL).build();
+auto param_aec2 = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("aec2").label("自动曝光 (DSP)").defaultValue(DEFAULT_AEC2).build();
+auto param_ae_level = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("ael").label("自动曝光级别").defaultValue(DEFAULT_AE_LEVEL).min(-2).max(2).build();
+auto param_aec_value = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("aecv").label("手动曝光值").defaultValue(DEFAULT_AEC_VALUE).min(9).max(1200).build();
+auto param_gain_ctrl = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("gc").label("增益控制").defaultValue(DEFAULT_GAIN_CONTROL).build();
+auto param_agc_gain = iotwebconf::Builder<iotwebconf::IntTParameter<int>>("agcg").label("AGC 增益").defaultValue(DEFAULT_AGC_GAIN).min(0).max(30).build();
+auto param_gain_ceiling = iotwebconf::Builder<iotwebconf::SelectTParameter<sizeof(camera_gain_ceilings[0])>>("gcl").label("自动增益上限").optionValues((const char *)&camera_gain_ceilings).optionNames((const char *)&camera_gain_ceilings).optionCount(sizeof(camera_gain_ceilings) / sizeof(camera_gain_ceilings[0])).nameLength(sizeof(camera_gain_ceilings[0])).defaultValue(DEFAULT_GAIN_CEILING).build();
+auto param_bpc = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("bpc").label("黑像素校正").defaultValue(DEFAULT_BPC).build();
+auto param_wpc = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("wpc").label("白像素校正").defaultValue(DEFAULT_WPC).build();
+auto param_raw_gma = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("rg").label("Gamma 校正").defaultValue(DEFAULT_RAW_GAMMA).build();
+auto param_lenc = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("lenc").label("镜头校正").defaultValue(DEFAULT_LENC).build();
+auto param_hmirror = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("hm").label("水平镜像").defaultValue(DEFAULT_HORIZONTAL_MIRROR).build();
+auto param_vflip = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("vm").label("垂直翻转").defaultValue(DEFAULT_VERTICAL_MIRROR).build();
+auto param_dcw = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("dcw").label("缩小启用").defaultValue(DEFAULT_DCW).build();
+auto param_colorbar = iotwebconf::Builder<iotwebconf::CheckboxTParameter>("cb").label("彩色条纹").defaultValue(DEFAULT_COLORBAR).build();
 
 // Camera
 OV2640 cam;

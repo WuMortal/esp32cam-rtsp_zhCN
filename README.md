@@ -11,6 +11,8 @@ Simple [RTSP](https://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol), [HTTP
 
 Flashing this software on a ESP32CAM module will make it a **RTSP streaming camera** server, a **HTTP Motion JPEG streamer** and a **HTTP image server**.
 
+![ESP32CAM-RTSP](.\doc\simple_1.jpg)
+
 Supported protocols
 
 - RTSP

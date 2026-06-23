@@ -7,8 +7,8 @@ if (len(sys.argv) <= 2):
     print('Usage: minify.py input.html output.html')
     sys.exit(1)
 
-input_file = open(sys.argv[1], 'r')
-output_file = open(sys.argv[2], 'w')
+input_file = open(sys.argv[1], 'r', encoding='utf-8')
+output_file = open(sys.argv[2], 'w', encoding='utf-8')
 
 html = input_file.read()
 input_file.close()
