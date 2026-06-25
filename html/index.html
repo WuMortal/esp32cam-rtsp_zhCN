@@ -42,10 +42,15 @@
         .header {
             background: linear-gradient(135deg, var(--dark) 0%, #34495e 100%);
             color: white;
-            padding: 20px;
+            padding: 0;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .header-main {
+            padding: 15px 20px;
         }
 
         .header-top {
@@ -64,6 +69,42 @@
         .device-version {
             font-size: 0.85em;
             opacity: 0.8;
+        }
+
+        /* Navigation */
+        .nav-menu {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 3px solid transparent;
+            font-size: 0.95em;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom-color: var(--primary);
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            padding: 10px 15px;
+            cursor: pointer;
         }
 
         /* Status Bar */
@@ -160,13 +201,20 @@
             background: #000;
             border-radius: 8px;
             overflow: hidden;
-            aspect-ratio: 16/9;
+            width: 100%;
+            max-height: 65vh;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .preview-iframe {
+        .preview-stream {
             width: 100%;
             height: 100%;
-            border: none;
+            max-height: 65vh;
+            object-fit: contain;
+            display: block;
         }
 
         .preview-overlay {
@@ -201,6 +249,26 @@
         .preview-btn svg {
             width: 16px;
             height: 16px;
+        }
+
+        .preview-resolution {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .preview-resolution:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .preview-resolution option {
+            background: var(--dark);
+            color: white;
         }
 
         /* Quick Actions */
@@ -333,11 +401,12 @@
             font-size: 2em;
         }
 
-        /* Alert Messages */
+        /* Alerts Messages */
         .alert {
             padding: 15px 18px;
             border-radius: 8px;
             margin-bottom: 15px;
+            margin-top: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -419,16 +488,80 @@
             }
 
             .quick-actions {
-                flex-direction: column;
+                flex-direction: row;
+                gap: 10px;
             }
 
             .action-btn {
                 min-width: unset;
+                padding: 10px 12px;
+                font-size: 0.9em;
             }
 
             .status-bar {
                 justify-content: center;
             }
+
+            .nav-menu {
+                flex-direction: column;
+                display: none;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--dark);
+                z-index: 100;
+            }
+
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .nav-item {
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-left: 3px solid transparent;
+            }
+
+            .nav-item.active {
+                border-left-color: var(--primary);
+                border-bottom-color: transparent;
+            }
+
+            .header {
+                position: relative;
+            }
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
 
         /* Settings Modal */
@@ -576,6 +709,105 @@
             background: #7f8c8d;
         }
 
+        .wifi-status {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .wifi-status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .wifi-status-row:last-child {
+            border-bottom: none;
+        }
+
+        .wifi-status-label {
+            color: var(--gray);
+            font-size: 0.9em;
+        }
+
+        .wifi-scan {
+            margin-bottom: 15px;
+        }
+
+        .wifi-scan-status {
+            padding: 8px 0;
+            font-size: 0.9em;
+            color: var(--gray);
+        }
+
+        .wifi-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+
+        .wifi-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .wifi-item:last-child {
+            border-bottom: none;
+        }
+
+        .wifi-item:hover {
+            background: var(--bg);
+        }
+
+        .wifi-item-info {
+            flex: 1;
+        }
+
+        .wifi-item-ssid {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .wifi-item-detail {
+            font-size: 0.8em;
+            color: var(--gray);
+        }
+
+        .wifi-item-rssi {
+            font-size: 0.85em;
+            padding: 4px 8px;
+            background: var(--light);
+            border-radius: 4px;
+        }
+
+        .wifi-item-rssi.strong {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .wifi-item-rssi.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .wifi-item-rssi.weak {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .wifi-form {
+            margin-top: 15px;
+        }
+
         .toast {
             position: fixed;
             bottom: 20px;
@@ -606,39 +838,48 @@
 
 <body>
     <div class="container">
-        <!-- Header with Status -->
+        <!-- Header with Navigation -->
         <div class="header">
-            <div class="header-top">
-                <div>
-                    <div class="device-name">{{ThingName}}</div>
-                    <div class="device-version">{{BoardType}} | {{ChipModel}} rev.{{ChipRevision}}</div>
+            <div class="header-main">
+                <div class="header-top">
+                    <div>
+                        <div class="device-name">{{ThingName}}</div>
+                        <div class="device-version">{{BoardType}} | {{ChipModel}} rev.{{ChipRevision}}</div>
+                    </div>
+                    {{#NetworkState.OnLine}}
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <span class="status-dot online"></span>
+                            <span>已连接 WiFi</span>
+                        </div>
+                        <div class="status-item">
+                            <span>📶 {{SignalStrength}} dbm</span>
+                        </div>
+                        <div class="status-item">
+                            <span>🌐 {{IPv4}}</span>
+                        </div>
+                    </div>
+                    {{/NetworkState.OnLine}}
+                    {{#NetworkState.ApMode}}
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <span class="status-dot ap"></span>
+                            <span>AP 模式</span>
+                        </div>
+                        <div class="status-item">
+                            <span>🌐 {{IPv4}}</span>
+                        </div>
+                    </div>
+                    {{/NetworkState.ApMode}}
                 </div>
-                {{#NetworkState.OnLine}}
-                <div class="status-bar">
-                    <div class="status-item">
-                        <span class="status-dot online"></span>
-                        <span>已连接 WiFi</span>
-                    </div>
-                    <div class="status-item">
-                        <span>📶 {{SignalStrength}} dbm</span>
-                    </div>
-                    <div class="status-item">
-                        <span>🌐 {{IPv4}}</span>
-                    </div>
-                </div>
-                {{/NetworkState.OnLine}}
-                {{#NetworkState.ApMode}}
-                <div class="status-bar">
-                    <div class="status-item">
-                        <span class="status-dot ap"></span>
-                        <span>AP 模式</span>
-                    </div>
-                    <div class="status-item">
-                        <span>🌐 {{IPv4}}</span>
-                    </div>
-                </div>
-                {{/NetworkState.ApMode}}
             </div>
+            <button class="nav-toggle" onclick="toggleNav()">☰</button>
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item active" data-section="overview" onclick="showSection('overview')">📊 概览</li>
+                <li class="nav-item" data-section="device" onclick="showSection('device')">📱 设备信息</li>
+                <li class="nav-item" data-section="stream" onclick="showSection('stream')">📹 视频流</li>
+                <!-- <li class="nav-item" onclick="openSettings()">⚙️ 设置</li> -->
+            </ul>
         </div>
 
         <!-- Alerts -->
@@ -664,8 +905,8 @@
         </div>
         {{/CameraInitialized}}
 
-        <!-- Main Content -->
-        <div class="cards-grid">
+        <!-- Overview Section -->
+        <div class="content-section active" id="section-overview">
             <!-- Live Preview -->
             {{#CameraInitialized}}
             <div class="card preview-card">
@@ -678,10 +919,51 @@
                 </div>
                 <div class="card-body" style="padding:0">
                     <div class="preview-container">
-                        <iframe class="preview-iframe" id="streamFrame" src="http://{{IPv4}}/stream"
-                            title="Camera Stream"></iframe>
+                        <img class="preview-stream" id="streamFrame" src="http://{{IPv4}}/stream" title="Camera Stream">
                         <div class="preview-overlay">
 
+                            <a class="preview-btn" onclick="refreshStream()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10" />
+                                    <polyline points="1 20 1 14 7 14" />
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                                </svg>
+                            </a>
+                            <a onclick="openStreamInNewWindow('http://{{IPv4}}/snapshot')" target="_blank"
+                                class="preview-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                            </a>
+                            <!-- <a class="preview-btn" onclick="openSettings()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                                </svg>
+                                设置
+                            </a> -->
+                            <select class="preview-resolution" id="quickResolution"
+                                onchange="quickChangeResolution(this.value)" title="切换分辨率">
+                                <!-- <option value="0">160x120</option>
+                                <option value="1">176x144</option>
+                                <option value="2">240x176</option>
+                                <option value="3">240x240</option>
+                                <option value="4">320x240</option>
+                                <option value="5">400x296</option>
+                                <option value="6">480x320</option>
+                                <option value="7">640x480</option>
+                                <option value="8">800x600</option>
+                                <option value="9">1024x768</option>
+                                <option value="10">1280x720</option>
+                                <option value="11">1280x1024</option>
+                                <option value="12">1600x1200</option> -->
+                                <option value="12">超清</option>
+                                <option value="9">高清</option>
+                                <option value="2">流畅</option>
+                            </select>
                             <a target="_blank" class="preview-btn"
                                 onclick="openStreamInNewWindow('http://{{IPv4}}/stream')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -689,30 +971,7 @@
                                     <polyline points="15 3 21 3 21 9" />
                                     <line x1="10" y1="14" x2="21" y2="3" />
                                 </svg>
-                                浏览器打开
-                            </a>
-                            <a class="preview-btn"
-                                onclick="openStreamInNewWindow('rtsp://{{IPv4}}:{{RtspPort}}/mjpeg/1')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3" />
-                                </svg>
-                                VLC 播放
-                            </a>
-                            <a class="preview-btn" onclick="refreshStream()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="23 4 23 10 17 10" />
-                                    <polyline points="1 20 1 14 7 14" />
-                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                                </svg>
-                                刷新
-                            </a>
-                            <a onclick="openStreamInNewWindow('http://{{IPv4}}/snapshot')"  target="_blank" class="preview-btn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                    <circle cx="8.5" cy="8.5" r="1.5" />
-                                    <polyline points="21 15 16 10 5 21" />
-                                </svg>
-                                快照
+                                浏览器
                             </a>
                         </div>
                     </div>
@@ -730,8 +989,9 @@
                 </div>
                 <div class="card-body">
                     <div class="quick-actions">
-                        <button onclick="openSettings()" class="action-btn">⚙️ 配置设置</button>
-                        <a href="http://{{IPv4}}/restart" class="action-btn secondary">🔄 重启设备</a>
+                        <button onclick="openSettings()" class="action-btn">⚙️ 设置</button>
+                        <button onclick="openWifiConfig()" class="action-btn">📶 WiFi</button>
+                        <a href="http://{{IPv4}}/restart" class="action-btn secondary">🔄 重启</a>
                     </div>
                     <div class="flash-control">
                         <div class="flash-label">
@@ -740,126 +1000,6 @@
                         </div>
                         <input type="range" id="flashSlider" min="0" max="255" value="0" class="flash-slider"
                             onchange="setFlash(this.value)" oninput="updateFlashValue(this.value)">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Device Info -->
-            <div class="card">
-                <div class="card-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                        <line x1="8" y1="21" x2="16" y2="21" />
-                        <line x1="12" y1="17" x2="12" y2="21" />
-                    </svg>
-                    设备信息
-                </div>
-                <div class="card-body">
-                    <div class="info-list">
-                        <div class="info-row">
-                            <span class="info-label">CPU 频率</span>
-                            <span class="info-value">{{CpuFreqMHz}} MHz</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">CPU 核心</span>
-                            <span class="info-value">{{CpuCores}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">内存</span>
-                            <span class="info-value">{{HeapSize}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">PSRAM</span>
-                            <span class="info-value">{{PsRamSize}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Flash</span>
-                            <span class="info-value">{{FlashSize}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">SDK 版本</span>
-                            <span class="info-value">{{SDKVersion}}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Network Info -->
-            <div class="card">
-                <div class="card-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12.55a11 11 0 0 1 14.08 0" />
-                        <path d="M1.42 9a16 16 0 0 1 21.16 0" />
-                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
-                        <line x1="12" y1="20" x2="12.01" y2="20" />
-                    </svg>
-                    网络信息
-                </div>
-                <div class="card-body">
-                    <div class="info-list">
-                        <div class="info-row">
-                            <span class="info-label">主机名</span>
-                            <span class="info-value">{{HostName}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">MAC 地址</span>
-                            <span class="info-value">{{MacAddress}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">WiFi 模式</span>
-                            <span class="info-value">{{WifiMode}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">接入点</span>
-                            <span class="info-value">{{AccessPoint}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">信号强度</span>
-                            <span class="info-value">{{SignalStrength}} dbm</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Camera Settings -->
-            <div class="card">
-                <div class="card-header">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                    </svg>
-                    摄像头参数
-                </div>
-                <div class="card-body">
-                    <div class="info-list">
-                        <div class="info-row">
-                            <span class="info-label">分辨率</span>
-                            <span class="info-value">{{FrameSize}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">帧率</span>
-                            <span class="info-value">{{FrameFrequency}} fps</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">JPEG 质量</span>
-                            <span class="info-value">{{JpegQuality}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">亮度</span>
-                            <span class="info-value">{{Brightness}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">对比度</span>
-                            <span class="info-value">{{Contrast}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">饱和度</span>
-                            <span class="info-value">{{Saturation}}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">特效</span>
-                            <span class="info-value">{{SpecialEffect}}</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -893,8 +1033,136 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Stream URLs -->
+        <!-- Device Section -->
+        <div class="content-section" id="section-device">
+            <div class="info-grid">
+                <!-- Device Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                        </svg>
+                        设备信息
+                    </div>
+                    <div class="card-body">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <span class="info-label">CPU 频率</span>
+                                <span class="info-value">{{CpuFreqMHz}} MHz</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">CPU 核心</span>
+                                <span class="info-value">{{CpuCores}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">内存</span>
+                                <span class="info-value">{{HeapSize}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">PSRAM</span>
+                                <span class="info-value">{{PsRamSize}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Flash</span>
+                                <span class="info-value">{{FlashSize}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">SDK 版本</span>
+                                <span class="info-value">{{SDKVersion}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                            <line x1="12" y1="20" x2="12.01" y2="20" />
+                        </svg>
+                        网络信息
+                    </div>
+                    <div class="card-body">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <span class="info-label">主机名</span>
+                                <span class="info-value">{{HostName}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">MAC 地址</span>
+                                <span class="info-value">{{MacAddress}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">WiFi 模式</span>
+                                <span class="info-value">{{WifiMode}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">接入点</span>
+                                <span class="info-value">{{AccessPoint}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">信号强度</span>
+                                <span class="info-value">{{SignalStrength}} dbm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Camera Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        摄像头参数
+                    </div>
+                    <div class="card-body">
+                        <div class="info-list">
+                            <div class="info-row">
+                                <span class="info-label">分辨率</span>
+                                <span class="info-value">{{FrameSize}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">帧率</span>
+                                <span class="info-value">{{FrameFrequency}} fps</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">JPEG 质量</span>
+                                <span class="info-value">{{JpegQuality}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">亮度</span>
+                                <span class="info-value">{{Brightness}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">对比度</span>
+                                <span class="info-value">{{Contrast}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">饱和度</span>
+                                <span class="info-value">{{Saturation}}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">特效</span>
+                                <span class="info-value">{{SpecialEffect}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stream Section -->
+        <div class="content-section" id="section-stream">
             <div class="card" style="grid-column: 1 / -1;">
                 <div class="card-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1075,6 +1343,53 @@
         </div>
     </div>
 
+    <!-- WiFi Config Modal -->
+    <div class="modal-overlay" id="wifiModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>WiFi 配置</h2>
+                <button class="modal-close" onclick="closeWifiConfig()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="wifi-status">
+                    <div class="wifi-status-row">
+                        <span class="wifi-status-label">当前网络</span>
+                        <span id="wifiCurrentSsid">--</span>
+                    </div>
+                    <div class="wifi-status-row">
+                        <span class="wifi-status-label">信号强度</span>
+                        <span id="wifiRssi">--</span>
+                    </div>
+                    <div class="wifi-status-row">
+                        <span class="wifi-status-label">IP 地址</span>
+                        <span id="wifiIp">--</span>
+                    </div>
+                </div>
+                <div class="wifi-scan">
+                    <button type="button" id="scanWifiBtn" class="btn btn-secondary" onclick="scanWifi()">🔍
+                        扫描附近WiFi</button>
+                    <div id="wifiScanStatus" class="wifi-scan-status"></div>
+                </div>
+                <div id="wifiList" class="wifi-list"></div>
+                <form id="wifiForm" class="wifi-form">
+                    <div class="form-group">
+                        <label class="form-label">SSID</label>
+                        <input type="text" class="form-input" name="wifiSsid" id="wifiSsid" placeholder="输入WiFi名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-input" name="wifiPassword" id="wifiPassword"
+                            placeholder="输入WiFi密码">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeWifiConfig()">取消</button>
+                <button type="button" id="wifiSaveBtn" class="btn btn-primary" onclick="saveWifiConfig()">保存并连接</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -1084,6 +1399,53 @@
         const gainCeilings = ["1X", "2X", "4X", "8X", "16X"];
 
         let configData = {};
+        initPage();
+        async function initPage() {
+            stopStream();
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                configData = data;
+                if (data.frame_size_index !== undefined) {
+                    document.getElementById('quickResolution').value = data.frame_size_index;
+                }
+            } catch (error) {
+                console.log('Failed to load initial config');
+            } finally {
+                startStream();
+            }
+        }
+
+        function toggleNav() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        }
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            document.getElementById('section-' + sectionId).classList.add('active');
+            document.querySelector('.nav-item[data-section="' + sectionId + '"]').classList.add('active');
+
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.remove('active');
+        }
+
+        document.addEventListener('click', function (e) {
+            const navMenu = document.getElementById('navMenu');
+            const navToggle = document.querySelector('.nav-toggle');
+            if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+                navMenu.classList.remove('active');
+            }
+        });
 
         function populateSelect(id, options, selectedIndex) {
             const select = document.getElementById(id);
@@ -1147,6 +1509,7 @@
                 document.getElementById('colorbar').checked = data.colorbar;
 
                 populateSelect('frame_size_index', frameSizes, data.frame_size_index);
+                document.getElementById('quickResolution').value = data.frame_size_index;
                 populateSelect('special_effect_index', cameraEffects, data.special_effect_index);
                 populateSelect('wb_mode_index', wbModes, data.wb_mode_index);
                 populateSelect('gain_ceiling_index', gainCeilings, data.gain_ceiling_index);
@@ -1200,6 +1563,8 @@
                 const result = await response.json();
                 if (result.success) {
                     showToast('保存成功', 'success');
+                    const frameSizeIndex = formData.get('frame_size_index');
+                    document.getElementById('quickResolution').value = frameSizeIndex;
                     setTimeout(closeSettings, 1000);
                 } else {
                     showToast('保存失败: ' + (result.error || '未知错误'), 'error');
@@ -1219,12 +1584,117 @@
             setTimeout(() => { toast.className = 'toast'; }, 3000);
         }
 
+        async function openWifiConfig() {
+            const modal = document.getElementById('wifiModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            await loadWifiStatus();
+        }
+
+        function closeWifiConfig() {
+            const modal = document.getElementById('wifiModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        async function loadWifiStatus() {
+            try {
+                const response = await fetch('/api/wifi/status');
+                const data = await response.json();
+                document.getElementById('wifiCurrentSsid').textContent = data.ssid || '未连接';
+                document.getElementById('wifiRssi').textContent = data.rssi ? data.rssi + ' dBm' : '--';
+                document.getElementById('wifiIp').textContent = data.ip || '--';
+                document.getElementById('wifiSsid').value = data.ssid || '';
+            } catch (error) {
+                document.getElementById('wifiCurrentSsid').textContent = '获取失败';
+            }
+        }
+
+        async function scanWifi() {
+            stopStream();
+            const scanBtn = document.getElementById('scanWifiBtn');
+            const scanStatus = document.getElementById('wifiScanStatus');
+            const wifiList = document.getElementById('wifiList');
+            scanBtn.disabled = true;
+            scanBtn.textContent = '扫描中...';
+            scanStatus.textContent = '正在扫描，请稍候...';
+            wifiList.innerHTML = '';
+            try {
+                const response = await fetch('/api/wifi/scan');
+                const networks = await response.json();
+                scanStatus.textContent = '找到 ' + networks.length + ' 个网络';
+                if (networks.length === 0) {
+                    wifiList.innerHTML = '<div class="wifi-item"><span class="wifi-item-ssid">未找到附近WiFi</span></div>';
+                } else {
+                    networks.forEach(net => {
+                        const rssiClass = net.rssi > -50 ? 'strong' : (net.rssi > -70 ? 'medium' : 'weak');
+                        const item = document.createElement('div');
+                        item.className = 'wifi-item';
+                        item.onclick = () => selectWifi(net.ssid);
+                        item.innerHTML = `
+                            <div class="wifi-item-info">
+                                <div class="wifi-item-ssid">${net.ssid}</div>
+                                <div class="wifi-item-detail">${net.encryption ? '加密' : '开放'} | CH ${net.channel}</div>
+                            </div>
+                            <span class="wifi-item-rssi ${rssiClass}">${net.rssi} dBm</span>
+                        `;
+                        wifiList.appendChild(item);
+                    });
+                }
+            } catch (error) {
+                scanStatus.textContent = '扫描失败';
+                showToast('WiFi扫描失败', 'error');
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.textContent = '🔍 扫描附近WiFi';
+                startStream();
+            }
+        }
+
+        function selectWifi(ssid) {
+            document.getElementById('wifiSsid').value = ssid;
+        }
+
+        async function saveWifiConfig() {
+            const saveBtn = document.getElementById('wifiSaveBtn');
+            const ssid = document.getElementById('wifiSsid').value.trim();
+            const password = document.getElementById('wifiPassword').value;
+            if (!ssid) {
+                showToast('请输入WiFi名称', 'error');
+                return;
+            }
+            saveBtn.disabled = true;
+            saveBtn.textContent = '保存中...';
+            try {
+                const response = await fetch('/api/wifi/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'ssid=' + encodeURIComponent(ssid) + '&password=' + encodeURIComponent(password)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('WiFi配置已保存，设备正在重启...', 'success');
+                    setTimeout(() => { closeWifiConfig(); }, 2000);
+                } else {
+                    showToast('保存失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('保存失败', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '保存并连接';
+            }
+        }
+
         document.getElementById('settingsModal').addEventListener('click', function (e) {
             if (e.target === this) closeSettings();
         });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeSettings();
+            if (e.key === 'Escape') {
+                closeSettings();
+                closeWifiConfig();
+            }
         });
 
         function updateFlashValue(val) {
@@ -1238,12 +1708,35 @@
 
         function startStream() {
             const streamFrame = document.getElementById('streamFrame');
-            if (streamFrame) streamFrame.src = 'http://{{IPv4}}/stream';
+            if (streamFrame) streamFrame.src = 'http://{{IPv4}}/stream?' + Date.now();
         }
 
         function refreshStream() {
-            stopStream();
-            setTimeout(startStream, 500);
+            const streamFrame = document.getElementById('streamFrame');
+            if (streamFrame) streamFrame.src = 'http://{{IPv4}}/stream?' + Date.now();
+        }
+
+        async function quickChangeResolution(index) {
+            try {
+                stopStream();
+                const resolution = frameSizes[parseInt(index)];
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'fs=' + encodeURIComponent(resolution)
+                });
+                if (response.ok) {
+                    showToast('分辨率已切换', 'success');
+                    setTimeout(refreshStream, 500);
+                } else {
+                    showToast('切换失败', 'error');
+                }
+            } catch (error) {
+                showToast('切换失败', 'error');
+            }
+            finally {
+                startStream();
+            }
         }
 
         async function setFlash(val) {

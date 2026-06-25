@@ -13,7 +13,7 @@ output_file = open(sys.argv[2], 'w', encoding='utf-8')
 html = input_file.read()
 input_file.close()
 
-html_minified = minify_html.minify(html, minify_css=True)
+html_minified = minify_html.minify(html, minify_css=True, minify_js=True)
 output_file.write(html_minified)
 
 output_file.close()

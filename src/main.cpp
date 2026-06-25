@@ -225,9 +225,9 @@ void handle_stream()
 
 void handle_restart()
 {
-	log_v("handle_restart");
-	WiFi.disconnect(false, true);
-	ESP.restart();
+  log_v("handle_restart");
+  WiFi.disconnect(false, true);
+  ESP.restart();
 }
 
 esp_err_t initialize_camera()
@@ -283,6 +283,7 @@ void update_camera_settings()
     return;
   }
 
+  camera->set_framesize(camera, lookup_frame_size(param_frame_size.value()));
   camera->set_brightness(camera, param_brightness.value());
   camera->set_contrast(camera, param_contrast.value());
   camera->set_saturation(camera, param_saturation.value());
@@ -368,36 +369,154 @@ void handle_api_config_save()
     return;
   }
 
-  if (web_server.hasArg("fd")) param_frame_duration.value() = web_server.arg("fd").toInt();
-  if (web_server.hasArg("fs")) { strncpy(param_frame_size.value(), web_server.arg("fs").c_str(), sizeof(param_frame_size.value()) - 1); param_frame_size.value()[sizeof(param_frame_size.value()) - 1] = '\0'; }
-  if (web_server.hasArg("q")) param_jpg_quality.value() = (byte)web_server.arg("q").toInt();
-  if (web_server.hasArg("b")) param_brightness.value() = (int8_t)web_server.arg("b").toInt();
-  if (web_server.hasArg("c")) param_contrast.value() = (int8_t)web_server.arg("c").toInt();
-  if (web_server.hasArg("s")) param_saturation.value() = (int8_t)web_server.arg("s").toInt();
-  if (web_server.hasArg("e")) { strncpy(param_special_effect.value(), web_server.arg("e").c_str(), sizeof(param_special_effect.value()) - 1); param_special_effect.value()[sizeof(param_special_effect.value()) - 1] = '\0'; }
-  if (web_server.hasArg("wb")) param_whitebal.value() = (web_server.arg("wb") == "1");
-  if (web_server.hasArg("awbg")) param_awb_gain.value() = (web_server.arg("awbg") == "1");
-  if (web_server.hasArg("wbm")) { strncpy(param_wb_mode.value(), web_server.arg("wbm").c_str(), sizeof(param_wb_mode.value()) - 1); param_wb_mode.value()[sizeof(param_wb_mode.value()) - 1] = '\0'; }
-  if (web_server.hasArg("ec")) param_exposure_ctrl.value() = (web_server.arg("ec") == "1");
-  if (web_server.hasArg("aec2")) param_aec2.value() = (web_server.arg("aec2") == "1");
-  if (web_server.hasArg("ael")) param_ae_level.value() = (int8_t)web_server.arg("ael").toInt();
-  if (web_server.hasArg("aecv")) param_aec_value.value() = (uint16_t)web_server.arg("aecv").toInt();
-  if (web_server.hasArg("gc")) param_gain_ctrl.value() = (web_server.arg("gc") == "1");
-  if (web_server.hasArg("agcg")) param_agc_gain.value() = (uint8_t)web_server.arg("agcg").toInt();
-  if (web_server.hasArg("gcl")) { strncpy(param_gain_ceiling.value(), web_server.arg("gcl").c_str(), sizeof(param_gain_ceiling.value()) - 1); param_gain_ceiling.value()[sizeof(param_gain_ceiling.value()) - 1] = '\0'; }
-  if (web_server.hasArg("bpc")) param_bpc.value() = (web_server.arg("bpc") == "1");
-  if (web_server.hasArg("wpc")) param_wpc.value() = (web_server.arg("wpc") == "1");
-  if (web_server.hasArg("rg")) param_raw_gma.value() = (web_server.arg("rg") == "1");
-  if (web_server.hasArg("lenc")) param_lenc.value() = (web_server.arg("lenc") == "1");
-  if (web_server.hasArg("hm")) param_hmirror.value() = (web_server.arg("hm") == "1");
-  if (web_server.hasArg("vm")) param_vflip.value() = (web_server.arg("vm") == "1");
-  if (web_server.hasArg("dcw")) param_dcw.value() = (web_server.arg("dcw") == "1");
-  if (web_server.hasArg("cb")) param_colorbar.value() = (web_server.arg("cb") == "1");
+  if (web_server.hasArg("fd"))
+    param_frame_duration.value() = web_server.arg("fd").toInt();
+  if (web_server.hasArg("fs"))
+  {
+    strncpy(param_frame_size.value(), web_server.arg("fs").c_str(), sizeof(param_frame_size.value()) - 1);
+    param_frame_size.value()[sizeof(param_frame_size.value()) - 1] = '\0';
+  }
+  if (web_server.hasArg("q"))
+    param_jpg_quality.value() = (byte)web_server.arg("q").toInt();
+  if (web_server.hasArg("b"))
+    param_brightness.value() = (int8_t)web_server.arg("b").toInt();
+  if (web_server.hasArg("c"))
+    param_contrast.value() = (int8_t)web_server.arg("c").toInt();
+  if (web_server.hasArg("s"))
+    param_saturation.value() = (int8_t)web_server.arg("s").toInt();
+  if (web_server.hasArg("e"))
+  {
+    strncpy(param_special_effect.value(), web_server.arg("e").c_str(), sizeof(param_special_effect.value()) - 1);
+    param_special_effect.value()[sizeof(param_special_effect.value()) - 1] = '\0';
+  }
+  if (web_server.hasArg("wb"))
+    param_whitebal.value() = (web_server.arg("wb") == "1");
+  if (web_server.hasArg("awbg"))
+    param_awb_gain.value() = (web_server.arg("awbg") == "1");
+  if (web_server.hasArg("wbm"))
+  {
+    strncpy(param_wb_mode.value(), web_server.arg("wbm").c_str(), sizeof(param_wb_mode.value()) - 1);
+    param_wb_mode.value()[sizeof(param_wb_mode.value()) - 1] = '\0';
+  }
+  if (web_server.hasArg("ec"))
+    param_exposure_ctrl.value() = (web_server.arg("ec") == "1");
+  if (web_server.hasArg("aec2"))
+    param_aec2.value() = (web_server.arg("aec2") == "1");
+  if (web_server.hasArg("ael"))
+    param_ae_level.value() = (int8_t)web_server.arg("ael").toInt();
+  if (web_server.hasArg("aecv"))
+    param_aec_value.value() = (uint16_t)web_server.arg("aecv").toInt();
+  if (web_server.hasArg("gc"))
+    param_gain_ctrl.value() = (web_server.arg("gc") == "1");
+  if (web_server.hasArg("agcg"))
+    param_agc_gain.value() = (uint8_t)web_server.arg("agcg").toInt();
+  if (web_server.hasArg("gcl"))
+  {
+    strncpy(param_gain_ceiling.value(), web_server.arg("gcl").c_str(), sizeof(param_gain_ceiling.value()) - 1);
+    param_gain_ceiling.value()[sizeof(param_gain_ceiling.value()) - 1] = '\0';
+  }
+  if (web_server.hasArg("bpc"))
+    param_bpc.value() = (web_server.arg("bpc") == "1");
+  if (web_server.hasArg("wpc"))
+    param_wpc.value() = (web_server.arg("wpc") == "1");
+  if (web_server.hasArg("rg"))
+    param_raw_gma.value() = (web_server.arg("rg") == "1");
+  if (web_server.hasArg("lenc"))
+    param_lenc.value() = (web_server.arg("lenc") == "1");
+  if (web_server.hasArg("hm"))
+    param_hmirror.value() = (web_server.arg("hm") == "1");
+  if (web_server.hasArg("vm"))
+    param_vflip.value() = (web_server.arg("vm") == "1");
+  if (web_server.hasArg("dcw"))
+    param_dcw.value() = (web_server.arg("dcw") == "1");
+  if (web_server.hasArg("cb"))
+    param_colorbar.value() = (web_server.arg("cb") == "1");
 
   iotWebConf.saveConfig();
   update_camera_settings();
 
   web_server.send(200, "application/json", "{\"success\":true}");
+}
+
+void handle_wifi_status()
+{
+  log_v("handle_wifi_status");
+  web_server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  web_server.sendHeader("Content-Type", "application/json");
+
+  String json = "{";
+  json += "\"ssid\":\"" + WiFi.SSID() + "\",";
+  json += "\"rssi\":" + String(WiFi.RSSI()) + ",";
+  json += "\"ip\":\"" + WiFi.localIP().toString() + "\"";
+  json += "}";
+
+  web_server.send(200, "application/json", json);
+}
+
+void handle_wifi_scan()
+{
+  log_v("handle_wifi_scan");
+  web_server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  web_server.sendHeader("Content-Type", "application/json");
+
+  int n = WiFi.scanNetworks(false, false);
+  String json = "[";
+  for (int i = 0; i < n; i++)
+  {
+    if (i > 0)
+      json += ",";
+    json += "{";
+    json += "\"ssid\":\"" + WiFi.SSID(i) + "\",";
+    json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
+    json += "\"channel\":" + String(WiFi.channel(i)) + ",";
+    json += "\"encryption\":" + String(WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "true" : "false");
+    json += "}";
+  }
+  json += "]";
+
+  web_server.send(200, "application/json", json);
+
+  WiFi.scanDelete();
+}
+
+void handle_wifi_config_save()
+{
+  log_v("handle_wifi_config_save");
+  web_server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  web_server.sendHeader("Content-Type", "application/json");
+
+  String ssid = "";
+  String password = "";
+
+  if (web_server.hasArg("ssid"))
+    ssid = web_server.arg("ssid");
+  if (web_server.hasArg("password"))
+    password = web_server.arg("password");
+
+  if (ssid.length() == 0)
+  {
+    web_server.send(400, "application/json", "{\"success\":false,\"error\":\"SSID is required\"}");
+    return;
+  }
+  auto *wifiParams = iotWebConf.getWifiParameterGroup();
+
+  if (wifiParams->_wifiSsid[0] == '\0')
+  {
+    web_server.send(500, "application/json", "{\"success\":false,\"error\":\"WiFi settings not available\"}");
+    return;
+  }
+
+  strncpy(wifiParams->_wifiSsid, ssid.c_str(), sizeof(wifiParams->_wifiSsid) - 1);
+  wifiParams->_wifiSsid[sizeof(wifiParams->_wifiSsid) - 1] = '\0';
+  strncpy(wifiParams->_wifiPassword, password.c_str(), sizeof(wifiParams->_wifiPassword) - 1);
+  wifiParams->_wifiPassword[sizeof(wifiParams->_wifiPassword) - 1] = '\0';
+
+  iotWebConf.saveConfig();
+
+  web_server.send(200, "application/json", "{\"success\":true}");
+
+  delay(1000);
+  ESP.restart();
 }
 
 void start_rtsp_server()
@@ -527,6 +646,10 @@ void setup()
   web_server.on("/api/config", HTTP_GET, handle_api_config);
   // API: save config
   web_server.on("/api/config", HTTP_POST, handle_api_config_save);
+  // WiFi APIs
+  web_server.on("/api/wifi/status", HTTP_GET, handle_wifi_status);
+  web_server.on("/api/wifi/scan", HTTP_GET, handle_wifi_scan);
+  web_server.on("/api/wifi/config", HTTP_POST, handle_wifi_config_save);
 #ifdef FLASH_LED_GPIO
   // Flash led
   web_server.on("/flash", HTTP_GET, handle_flash);
