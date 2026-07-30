@@ -243,6 +243,31 @@ void setup()
     if (camera_init_result == ESP_OK)
     {
       update_camera_settings();
+      auto sensor = esp_camera_sensor_get();
+      if (sensor)
+      {
+        framesize_t fs = sensor->status.framesize;
+        int w = 640, h = 480;
+        switch (fs)
+        {
+        case FRAMESIZE_QQVGA:  w = 160; h = 120; break;
+        case FRAMESIZE_QCIF:   w = 176; h = 144; break;
+        case FRAMESIZE_HQVGA:  w = 240; h = 176; break;
+        case FRAMESIZE_240X240: w = 240; h = 240; break;
+        case FRAMESIZE_QVGA:   w = 320; h = 240; break;
+        case FRAMESIZE_CIF:    w = 400; h = 296; break;
+        case FRAMESIZE_HVGA:   w = 480; h = 320; break;
+        case FRAMESIZE_VGA:    w = 640; h = 480; break;
+        case FRAMESIZE_SVGA:   w = 800; h = 600; break;
+        case FRAMESIZE_XGA:    w = 1024; h = 768; break;
+        case FRAMESIZE_HD:     w = 1280; h = 720; break;
+        case FRAMESIZE_SXGA:   w = 1280; h = 1024; break;
+        case FRAMESIZE_UXGA:   w = 1600; h = 1200; break;
+        default: break;
+        }
+        storage.setVideoParams(w, h, 1000 / param_frame_duration.value());
+        log_i("Video recording: %dx%d @ %dfps", w, h, 1000 / param_frame_duration.value());
+      }
       break;
     }
     esp_camera_deinit();

@@ -27,5 +27,6 @@ void handle_wifi_config_save();
 void handle_storage_status();
 void handle_snapshot_save();
 void handle_video_control();
+void handle_time_sync();
 
 void handle_video_recording_loop();

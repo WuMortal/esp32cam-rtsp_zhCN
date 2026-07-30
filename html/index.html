@@ -1524,6 +1524,20 @@
             });
         }
 
+        async function syncTime() {
+            try {
+                const timestamp = Math.floor(Date.now() / 1000);
+                const timezone = new Date().getTimezoneOffset();
+                const response = await fetch('/api/time/sync?timestamp=' + timestamp + '&timezone=' + timezone, { method: 'POST' });
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Time synchronized:', data.time);
+                }
+            } catch (error) {
+                console.error('Time sync failed:', error);
+            }
+        }
+
         async function openSettings() {
             const modal = document.getElementById('settingsModal');
             const settingsBtn = document.getElementById('settingsBtn');
@@ -1940,6 +1954,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            syncTime();
             initStorage();
         });
     </script>

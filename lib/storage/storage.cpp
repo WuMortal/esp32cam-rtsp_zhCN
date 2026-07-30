@@ -10,6 +10,9 @@ Storage::Storage()
     , enabled_(false)
     , recording_(false)
     , snapshotCount_(0)
+    , videoWidth_(640)
+    , videoHeight_(480)
+    , videoFps_(10)
     , videoStartTime_(0)
     , videoMaxDuration_(60000)
     , videoMaxFileSize_(0)
@@ -133,16 +136,21 @@ bool Storage::ensureDirectory(const char *path)
 
 String Storage::generateFileName(const char *prefix, const char *extension)
 {
-    // 时间戳可能未同步（无 SNTP），追加递增序号保证跨重启/同微秒不重名
     static uint32_t sequence = 0;
     sequence++;
 
     struct timeval tv;
     gettimeofday(&tv, nullptr);
 
+    struct tm timeinfo;
+    localtime_r(&tv.tv_sec, &timeinfo);
+
     char buffer[80];
-    snprintf(buffer, sizeof(buffer), "/%s_%lu_%06lu_%lu%s",
-             prefix, (unsigned long)tv.tv_sec, (unsigned long)tv.tv_usec,
+    snprintf(buffer, sizeof(buffer), "/%s_%04d%02d%02d%02d%02d_%06lu_%lu%s",
+             prefix,
+             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+             timeinfo.tm_hour, timeinfo.tm_min,
+             (unsigned long)tv.tv_usec,
              (unsigned long)sequence, extension);
     return String(basePath_) + String(buffer);
 }
@@ -188,10 +196,10 @@ bool Storage::saveJpegFrame(const uint8_t *data, size_t len)
     if (data == nullptr || len == 0)
         return false;
 
-    if (recording_ && videoFile_)
+    if (recording_ && aviWriter_.isOpen())
     {
-        size_t written = videoFile_.write(data, len);
-        videoFileSize_ += written;
+        bool written = aviWriter_.writeFrame(data, len);
+        videoFileSize_ += len;
 
         if (videoMaxFileSize_ > 0 && videoFileSize_ >= videoMaxFileSize_)
         {
@@ -206,23 +214,29 @@ bool Storage::saveJpegFrame(const uint8_t *data, size_t len)
             closeVideoFile();
         }
 
-        return true;
+        return written;
     }
 
     return false;
 }
 
-bool Storage::openVideoFile()
+bool Storage::openVideoFile(int width, int height, int fps)
 {
     if (!mounted_ || !enabled_)
-        return false;
+    {
+        if (!begin())
+            return false;
+    }
 
     if (!ensureDirectory(basePath_))
         return false;
 
-    String fileName = generateFileName("vid", ".mjpeg");
-    videoFile_ = SD_MMC.open(fileName.c_str(), FILE_WRITE);
-    if (!videoFile_)
+    videoWidth_ = width;
+    videoHeight_ = height;
+    videoFps_ = fps;
+
+    String fileName = generateFileName("vid", ".avi");
+    if (!aviWriter_.open(fileName.c_str(), width, height, fps))
     {
         log_e("Failed to open video file: %s", fileName.c_str());
         return false;
@@ -230,29 +244,28 @@ bool Storage::openVideoFile()
 
     videoStartTime_ = millis();
     videoFileSize_ = 0;
-    log_i("Video file opened: %s", fileName.c_str());
+    log_i("Video file opened: %s (%dx%d @ %dfps)", fileName.c_str(), width, height, fps);
     return true;
 }
 
 bool Storage::writeVideoFrame(const uint8_t *data, size_t len)
 {
-    if (!recording_ || !videoFile_)
+    if (!recording_ || !aviWriter_.isOpen())
     {
-        // 未在录像状态：不写帧，避免录像模式下分片失败误回退成快照
         return false;
     }
 
     if (data == nullptr || len == 0)
         return false;
 
-    size_t written = videoFile_.write(data, len);
-    videoFileSize_ += written;
+    bool written = aviWriter_.writeFrame(data, len);
+    videoFileSize_ += len;
 
     if (videoMaxFileSize_ > 0 && videoFileSize_ >= videoMaxFileSize_)
     {
         log_i("Video file size limit reached");
         closeVideoFile();
-        if (!openVideoFile())
+        if (!openVideoFile(videoWidth_, videoHeight_, videoFps_))
             recording_ = false;
     }
 
@@ -261,18 +274,18 @@ bool Storage::writeVideoFrame(const uint8_t *data, size_t len)
     {
         log_i("Video duration limit reached");
         closeVideoFile();
-        if (!openVideoFile())
+        if (!openVideoFile(videoWidth_, videoHeight_, videoFps_))
             recording_ = false;
     }
 
-    return written == len;
+    return written;
 }
 
 void Storage::closeVideoFile()
 {
-    if (videoFile_)
+    if (aviWriter_.isOpen())
     {
-        videoFile_.close();
+        aviWriter_.close();
         log_i("Video file closed");
     }
 }
@@ -282,7 +295,7 @@ void Storage::setVideoRecording(bool record)
     if (record && !recording_)
     {
         recording_ = true;
-        if (!openVideoFile())
+        if (!openVideoFile(videoWidth_, videoHeight_, videoFps_))
         {
             recording_ = false;
             log_e("Failed to start video recording");

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <SD_MMC.h>
+#include "avi_writer.h"
 
 class Storage
 {
@@ -48,6 +49,8 @@ public:
     unsigned long getVideoMaxFileSize() const { return videoMaxFileSize_; }
     unsigned long getVideoStartTime() const { return videoStartTime_; }
 
+    void setVideoParams(int width, int height, int fps) { videoWidth_ = width; videoHeight_ = height; videoFps_ = fps; }
+
 private:
     bool initialized_;
     bool mounted_;
@@ -57,7 +60,10 @@ private:
     String mountPoint_;
     char basePath_[64];
 
-    File videoFile_;
+    AviWriter aviWriter_;
+    int videoWidth_;
+    int videoHeight_;
+    int videoFps_;
     unsigned long videoStartTime_;
     unsigned long videoMaxDuration_;
     unsigned long videoMaxFileSize_;
@@ -67,7 +73,7 @@ private:
 
     bool ensureDirectory(const char *path);
     String generateFileName(const char *prefix, const char *extension);
-    bool openVideoFile();
+    bool openVideoFile(int width, int height, int fps);
 };
 
 extern Storage storage;

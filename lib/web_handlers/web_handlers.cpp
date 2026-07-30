@@ -7,6 +7,8 @@
 #include <format_number.h>
 #include <moustache.h>
 #include <ESPmDNS.h>
+#include <time.h>
+#include <sys/time.h>
 
 static constexpr size_t FRAME_SIZE_NAME_LEN = sizeof(frame_sizes[0].name);
 static constexpr size_t EFFECT_NAME_LEN = sizeof(camera_effects[0].name);
@@ -35,6 +37,7 @@ void registerWebHandlers(WebServer &server, Recorder &recorder)
   srv->on("/api/storage/status", HTTP_GET, handle_storage_status);
   srv->on("/api/storage/snapshot", HTTP_POST, handle_snapshot_save);
   srv->on("/api/storage/video", HTTP_POST, handle_video_control);
+  srv->on("/api/time/sync", HTTP_POST, handle_time_sync);
 #ifdef FLASH_LED_GPIO
   srv->on("/flash", HTTP_GET, handle_flash);
 #endif
@@ -530,6 +533,37 @@ void handle_video_control()
 }
 
 // ==================== loop-time helper ====================
+
+void handle_time_sync()
+{
+  log_v("handle_time_sync");
+  srv->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  srv->sendHeader("Content-Type", "application/json");
+
+  if (!srv->hasArg("timestamp"))
+  {
+    srv->send(400, "application/json", "{\"success\":false,\"error\":\"timestamp is required\"}");
+    return;
+  }
+
+  long timestamp = srv->arg("timestamp").toInt();
+  int timezone_minutes = 0;
+  if (srv->hasArg("timezone"))
+    timezone_minutes = srv->arg("timezone").toInt();
+
+  struct timeval tv;
+  tv.tv_sec = timestamp;
+  tv.tv_usec = 0;
+  settimeofday(&tv, nullptr);
+
+  char strftime_buf[64];
+  struct tm timeinfo;
+  localtime_r(&tv.tv_sec, &timeinfo);
+  strftime(strftime_buf, sizeof(strftime_buf), "%Y-%m-%d %H:%M:%S", &timeinfo);
+
+  log_i("Time synchronized: %s (timezone: %d min)", strftime_buf, timezone_minutes);
+  srv->send(200, "application/json", "{\"success\":true,\"time\":\"" + String(strftime_buf) + "\"}");
+}
 
 void handle_video_recording_loop()
 {
