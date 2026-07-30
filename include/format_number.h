@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-String format_value(double value)
+inline String format_value(double value)
 {
     if (value == 0.0)
         return "0";
@@ -10,7 +10,6 @@ String format_value(double value)
     if (value < 0)
         return "-" + format_value(-value);
 
-    // No decimal places
     if (value >= 1)
         return String(value, 0);
     if (value < 0.00001)
@@ -26,7 +25,7 @@ String format_value(double value)
     return String(value, 1);
 }
 
-String format_si(double value, int decimal_places = 2)
+inline String format_si(double value, int decimal_places = 2)
 {
     if (value == 0.0)
         return "0";
@@ -57,7 +56,7 @@ String format_si(double value, int decimal_places = 2)
     return "NaN";
 }
 
-String format_memory(size_t bytes, int decimal_places = 2)
+inline String format_memory(size_t bytes, int decimal_places = 2)
 {
     const char *suffix[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     auto val = (double)bytes;

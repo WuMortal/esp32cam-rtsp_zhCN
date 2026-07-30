@@ -1033,6 +1033,45 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Storage Status -->
+            <div class="card">
+                <div class="card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                    存储状态
+                </div>
+                <div class="card-body">
+                    <div class="info-list">
+                        <div class="info-row">
+                            <span class="info-label">TF卡状态</span>
+                            <span class="info-value"
+                                id="storageStatusText">{{StorageInitialized}}{{StorageMounted}}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">存储空间</span>
+                            <span class="info-value">{{StorageUsed}} / {{StorageTotal}}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">剩余空间</span>
+                            <span class="info-value">{{StorageFree}}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">快照数量</span>
+                            <span class="info-value" id="snapshotCount">{{SnapshotCount}}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">录像状态</span>
+                            <span class="info-value" id="videoRecordingText">{{VideoRecording}}</span>
+                        </div>
+                    </div>
+                    <div class="quick-actions" style="margin-top:15px;">
+                        <button id="snapshotBtn" class="action-btn success" onclick="takeSnapshot()">📷 拍照</button>
+                        <button id="videoBtn" class="action-btn danger" onclick="toggleVideo()">⏺ 录像</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Device Section -->
@@ -1334,6 +1373,32 @@
                             <label for="colorbar">彩色条纹</label>
                         </div>
                     </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">存储设置</div>
+                        <div class="form-group form-checkbox">
+                            <input type="checkbox" name="storage_enabled" id="storage_enabled">
+                            <label for="storage_enabled">启用TF卡存储</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">存储路径</label>
+                            <input type="text" class="form-input" name="storage_path" id="storage_path"
+                                placeholder="/esp32cam">
+                        </div>
+                        <div class="form-group form-checkbox">
+                            <input type="checkbox" name="video_enabled" id="video_enabled">
+                            <label for="video_enabled">启用录像</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">录像时长 (ms)</label>
+                            <input type="number" class="form-input" name="video_duration" id="video_duration"
+                                min="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">单文件大小上限 (KB, 0=不限制)</label>
+                            <input type="number" class="form-input" name="video_max_size" id="video_max_size" min="0">
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -1514,6 +1579,12 @@
                 populateSelect('wb_mode_index', wbModes, data.wb_mode_index);
                 populateSelect('gain_ceiling_index', gainCeilings, data.gain_ceiling_index);
 
+                document.getElementById('storage_enabled').checked = (data.storage_enabled === true);
+                document.getElementById('storage_path').value = data.storage_path || '';
+                document.getElementById('video_enabled').checked = (data.video_enabled === true);
+                document.getElementById('video_duration').value = data.video_duration || '';
+                document.getElementById('video_max_size').value = data.video_max_size !== undefined ? data.video_max_size : '';
+
             } catch (error) {
                 showToast('加载配置失败', 'error');
             }
@@ -1553,6 +1624,11 @@
             params.append('vm', formData.has('vflip') ? '1' : '0');
             params.append('dcw', formData.has('dcw') ? '1' : '0');
             params.append('cb', formData.has('colorbar') ? '1' : '0');
+            params.append('ste', formData.has('storage_enabled') ? '1' : '0');
+            params.append('stp', formData.get('storage_path') || '/esp32cam');
+            params.append('ve', formData.has('video_enabled') ? '1' : '0');
+            params.append('vd', parseInt(formData.get('video_duration')) || 60000);
+            params.append('vms', parseInt(formData.get('video_max_size')) || 0);
 
             try {
                 const response = await fetch('/api/config', {
@@ -1562,7 +1638,10 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    showToast('保存成功', 'success');
+                    if (result.warning)
+                        showToast(result.warning, 'warning');
+                    else
+                        showToast('保存成功', 'success');
                     const frameSizeIndex = formData.get('frame_size_index');
                     document.getElementById('quickResolution').value = frameSizeIndex;
                     setTimeout(closeSettings, 1000);
@@ -1585,6 +1664,7 @@
         }
 
         async function openWifiConfig() {
+            stopStream();
             const modal = document.getElementById('wifiModal');
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1592,6 +1672,7 @@
         }
 
         function closeWifiConfig() {
+            startStream();
             const modal = document.getElementById('wifiModal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
@@ -1756,6 +1837,111 @@
             window.open(url, '_blank');
             setTimeout(startStream, 2000);
         }
+
+        async function takeSnapshot() {
+            const btn = document.getElementById('snapshotBtn');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+            try {
+                stopStream();
+                const response = await fetch('/api/storage/snapshot', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('snapshotCount').textContent = result.count;
+                    showToast('快照已保存', 'success');
+                } else {
+                    showToast('保存失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('保存失败', 'error');
+            } finally {
+                startStream();
+                btn.disabled = false;
+                btn.textContent = '📷 拍照';
+            }
+        }
+
+        async function toggleVideo() {
+            const btn = document.getElementById('videoBtn');
+            const isRecording = btn.textContent.includes('停止');
+            btn.disabled = true;
+            btn.textContent = isRecording ? '停止中...' : '开始中...';
+            try {
+                stopStream();
+                const action = isRecording ? 'stop' : 'start';
+                const response = await fetch('/api/storage/video?action=' + action, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    if (result.recording) {
+                        btn.textContent = '⏹ 停止录像';
+                        btn.className = 'action-btn danger';
+                        showToast('开始录像', 'success');
+                    } else {
+                        btn.textContent = '⏺ 录像';
+                        btn.className = 'action-btn success';
+                        showToast('停止录像', 'success');
+                    }
+                    document.getElementById('videoRecordingText').textContent = result.recording;
+                } else {
+                    showToast('操作失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('操作失败', 'error');
+            } finally {
+                startStream();
+                btn.disabled = false;
+            }
+        }
+
+        async function loadStorageStatus() {
+            try {
+                const response = await fetch('/api/storage/status');
+                const data = await response.json();
+                const statusText = data.initialized ? (data.mounted ? '已挂载' : '未挂载') : '未初始化';
+                document.getElementById('storageStatusText').textContent = statusText;
+                document.getElementById('snapshotCount').textContent = data.snapshotCount;
+                const videoBtn = document.getElementById('videoBtn');
+                if (data.recording) {
+                    videoBtn.textContent = '⏹ 停止录像';
+                    videoBtn.className = 'action-btn danger';
+                } else {
+                    videoBtn.textContent = '⏺ 录像';
+                    videoBtn.className = 'action-btn success';
+                }
+                document.getElementById('videoRecordingText').textContent = data.recording;
+            } catch (error) {
+                console.log('Failed to load storage status');
+            }
+        }
+
+        async function initStorage() {
+            try {
+                const response = await fetch('/api/storage/status');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.initialized && data.mounted) {
+                        document.getElementById('storageStatusText').textContent = '已挂载';
+                    } else if (data.initialized) {
+                        document.getElementById('storageStatusText').textContent = '未挂载';
+                    } else {
+                        document.getElementById('storageStatusText').textContent = '未初始化';
+                    }
+                    document.getElementById('snapshotCount').textContent = data.snapshotCount;
+                    const videoBtn = document.getElementById('videoBtn');
+                    if (data.recording) {
+                        videoBtn.textContent = '⏹ 停止录像';
+                        videoBtn.className = 'action-btn danger';
+                    }
+                    document.getElementById('videoRecordingText').textContent = data.recording;
+                }
+            } catch (error) {
+                console.log('Storage not available');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initStorage();
+        });
     </script>
 </body>
 

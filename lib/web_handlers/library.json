@@ -1,0 +1,14 @@
+{
+    "name": "WebHandlers",
+    "version": "1.0.0",
+    "description": "HTTP route handlers for ESP32-CAM RTSP",
+    "dependencies": {
+        "Recorder": "*",
+        "Storage": "*"
+    },
+    "frameworks": "*",
+    "platforms": "*",
+    "build": {
+        "libLDFMode": "chain+"
+    }
+}

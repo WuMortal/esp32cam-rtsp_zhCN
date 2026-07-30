@@ -1,6 +1,9 @@
 #pragma once
+#include <StreamString.h>
+#include <ctime>
+#include <WString.h>
 
-String format_duration(time_t seconds)
+inline String format_duration(time_t seconds)
 {
   auto days = seconds / (60 * 60 * 24);
   auto tm = gmtime(&seconds);

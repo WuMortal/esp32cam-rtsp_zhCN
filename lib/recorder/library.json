@@ -1,0 +1,10 @@
+{
+    "name": "Recorder",
+    "version": "1.0.0",
+    "description": "Async video recorder for ESP32-CAM (Core 1 SD writer)",
+    "dependencies": {
+        "Storage": "*"
+    },
+    "frameworks": "*",
+    "platforms": "*"
+}
