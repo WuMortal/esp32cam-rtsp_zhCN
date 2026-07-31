@@ -832,6 +832,189 @@
         .toast.show {
             display: block;
         }
+
+        /* File list */
+        .file-list-container {
+            margin-top: 10px;
+        }
+
+        .file-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .file-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.95em;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .file-tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .file-tab:hover {
+            background: var(--light);
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .file-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            min-width: 0;
+        }
+
+        .file-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .file-thumbnail {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5em;
+            position: relative;
+        }
+
+        .file-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .file-info {
+            padding: 10px;
+        }
+
+        .file-name {
+            font-size: 0.85em;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            font-size: 0.75em;
+            color: var(--gray);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .file-play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            opacity: 0.8;
+        }
+
+        .file-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+
+        .refresh-files-btn {
+            float: right;
+            padding: 6px 12px;
+            font-size: 0.85em;
+            background: var(--light);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .refresh-files-btn:hover {
+            background: #ddd;
+        }
+
+        /* Video player modal */
+        .video-player-container {
+            width: 100%;
+            background: #000;
+        }
+
+        .video-player-container video {
+            width: 100%;
+            max-height: 70vh;
+            display: block;
+        }
+
+        .image-viewer-container {
+            width: 100%;
+            text-align: center;
+            background: #000;
+        }
+
+        .image-viewer-container img {
+            max-width: 100%;
+            max-height: 70vh;
+        }
+
+        .viewer-toolbar {
+            padding: 10px;
+            background: var(--light);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .viewer-filename {
+            flex: 1;
+            font-family: monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .viewer-btn {
+            padding: 6px 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .viewer-btn:hover {
+            background: #286090;
+        }
     </style>
     <title>{{AppTitle}} v{{AppVersion}}</title>
 </head>
@@ -878,6 +1061,7 @@
                 <li class="nav-item active" data-section="overview" onclick="showSection('overview')">📊 概览</li>
                 <li class="nav-item" data-section="device" onclick="showSection('device')">📱 设备信息</li>
                 <li class="nav-item" data-section="stream" onclick="showSection('stream')">📹 视频流</li>
+                <li class="nav-item" data-section="files" onclick="showSection('files'); loadFileList();">📁 文件</li>
                 <!-- <li class="nav-item" onclick="openSettings()">⚙️ 设置</li> -->
             </ul>
         </div>
@@ -919,7 +1103,7 @@
                 </div>
                 <div class="card-body" style="padding:0">
                     <div class="preview-container">
-                        <img class="preview-stream" id="streamFrame" src="http://{{IPv4}}/stream" title="Camera Stream">
+                        <img class="preview-stream" id="streamFrame" src="" title="Camera Stream" style="background: #000;">
                         <div class="preview-overlay">
 
                             <a class="preview-btn" onclick="refreshStream()">
@@ -1232,6 +1416,31 @@
             </div>
         </div>
 
+        <!-- Files Section -->
+        <div class="content-section" id="section-files">
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                    文件列表
+                    <button class="refresh-files-btn" onclick="loadFileList()">🔄 刷新</button>
+                </div>
+                <div class="card-body">
+                    <div class="file-tabs">
+                        <button class="file-tab active" data-type="all" onclick="switchFileTab('all')">全部</button>
+                        <button class="file-tab" data-type="video" onclick="switchFileTab('video')">视频</button>
+                        <button class="file-tab" data-type="image" onclick="switchFileTab('image')">图片</button>
+                    </div>
+                    <div class="file-list-container">
+                        <div id="fileGrid" class="file-grid">
+                            <div class="file-empty">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="footer">
             ESP32-CAM RTSP | 配置版本 {{AppVersion}}
         </div>
@@ -1451,6 +1660,23 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeWifiConfig()">取消</button>
                 <button type="button" id="wifiSaveBtn" class="btn btn-primary" onclick="saveWifiConfig()">保存并连接</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Viewer Modal -->
+    <div class="modal-overlay" id="fileViewerModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="viewerTitle">文件查看</h2>
+                <button class="modal-close" onclick="closeFileViewer()">&times;</button>
+            </div>
+            <div id="viewerContent">
+            </div>
+            <div class="viewer-toolbar">
+                <span class="viewer-filename" id="viewerFilename"></span>
+                <a id="viewerDownloadBtn" href="#" target="_blank" class="viewer-btn">⬇️ 下载</a>
+                <button class="viewer-btn" onclick="closeFileViewer()">关闭</button>
             </div>
         </div>
     </div>
@@ -1953,9 +2179,326 @@
             }
         }
 
+        let allFiles = [];
+        let currentFileTab = 'all';
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        async function loadFileList() {
+            const fileGrid = document.getElementById('fileGrid');
+            fileGrid.innerHTML = '<div class="file-empty">加载中...</div>';
+            try {
+                stopStream();
+                const response = await fetch('/api/storage/list');
+                const data = await response.json();
+                allFiles = data.files || [];
+                renderFileList();
+            } catch (error) {
+                fileGrid.innerHTML = '<div class="file-empty">加载文件列表失败</div>';
+                console.error('Failed to load file list:', error);
+            } finally {
+                startStream();
+            }
+        }
+
+        function switchFileTab(type) {
+            currentFileTab = type;
+            document.querySelectorAll('.file-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.type === type) tab.classList.add('active');
+            });
+            renderFileList();
+        }
+
+        function renderFileList() {
+            const fileGrid = document.getElementById('fileGrid');
+            let files = allFiles;
+            if (currentFileTab === 'video') {
+                files = allFiles.filter(f => f.isVideo);
+            } else if (currentFileTab === 'image') {
+                files = allFiles.filter(f => !f.isVideo);
+            }
+
+            files.sort((a, b) => b.time.localeCompare(a.time));
+
+            if (files.length === 0) {
+                fileGrid.innerHTML = '<div class="file-empty">暂无文件</div>';
+                return;
+            }
+
+            fileGrid.innerHTML = '';
+            files.forEach(file => {
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                card.onclick = () => openFile(file);
+
+                const thumbContainer = document.createElement('div');
+                thumbContainer.className = 'file-thumbnail';
+
+                if (file.isVideo) {
+                    thumbContainer.innerHTML = '🎬';
+                    const overlay = document.createElement('div');
+                    overlay.className = 'file-play-overlay';
+                    overlay.innerHTML = '▶';
+                    thumbContainer.appendChild(overlay);
+                } else {
+                    const img = document.createElement('img');
+                    img.src = file.url + '?thumb=' + Date.now();
+                    img.alt = file.name;
+                    img.onerror = function() {
+                        this.parentElement.innerHTML = '📷';
+                    };
+                    thumbContainer.appendChild(img);
+                }
+
+                const info = document.createElement('div');
+                info.className = 'file-info';
+                info.innerHTML = `
+                    <div class="file-name" title="${file.name}">${file.name}</div>
+                    <div class="file-meta">
+                        <span>${formatFileSize(file.size)}</span>
+                        <span>${file.time.split(' ')[0]}</span>
+                    </div>
+                `;
+
+                card.appendChild(thumbContainer);
+                card.appendChild(info);
+                fileGrid.appendChild(card);
+            });
+        }
+
+        function openFile(file) {
+            const modal = document.getElementById('fileViewerModal');
+            const viewerContent = document.getElementById('viewerContent');
+            const viewerTitle = document.getElementById('viewerTitle');
+            const viewerFilename = document.getElementById('viewerFilename');
+            const downloadBtn = document.getElementById('viewerDownloadBtn');
+
+            viewerFilename.textContent = file.name;
+            downloadBtn.href = file.url + '?download=1';
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            if (file.isVideo) {
+                viewerTitle.textContent = '视频播放';
+                viewerContent.innerHTML = `
+                    <div class="video-player-container" style="position: relative; background: #000;">
+                        <div id="videoPoster" style="width: 100%; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ccc; padding: 60px 20px;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">🎬</div>
+                            <p style="margin: 10px 0; font-size: 1.1em;">${file.name}</p>
+                            <p style="margin: 10px 0; color: #888; font-size: 0.9em;">
+                                大小: ${formatFileSize(file.size)} · 时间: ${file.time}
+                            </p>
+                            <button id="loadVideoBtn" class="viewer-btn" style="margin-top: 20px; padding: 12px 30px; font-size: 1em; background: var(--primary); color: white; border: none; border-radius: 25px; cursor: pointer;">
+                                ▶ 开始播放
+                            </button>
+                            <p style="margin-top: 15px; color: #666; font-size: 0.8em;">
+                                点击按钮加载视频文件（视频较大时请耐心等待）
+                            </p>
+                        </div>
+                        <canvas id="mjpegCanvas" style="width: 100%; max-height: 70vh; display: none;"></canvas>
+                        <div id="videoControls" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); padding: 10px; display: none; gap: 10px; align-items: center;">
+                            <button id="playPauseBtn" class="viewer-btn" style="background: #fff; color: #000; width: 40px;">▶</button>
+                            <span id="videoTime" style="color: white; font-family: monospace; font-size: 0.9em;">00:00 / 00:00</span>
+                            <input type="range" id="videoProgress" style="flex: 1;" min="0" max="100" value="0">
+                            <span id="videoFpsInfo" style="color: white; font-size: 0.8em;"></span>
+                        </div>
+                        <div id="videoLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center; display: none;">
+                            <div style="font-size: 3em; margin-bottom: 10px;">⏳</div>
+                            <div>加载中...</div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const loadBtn = document.getElementById('loadVideoBtn');
+                    if (loadBtn) {
+                        loadBtn.onclick = () => {
+                            document.getElementById('videoPoster').style.display = 'none';
+                            document.getElementById('videoLoading').style.display = 'block';
+                            loadAndPlayMjpeg(file);
+                        };
+                    }
+                }, 100);
+            } else {
+                viewerTitle.textContent = '图片查看';
+                viewerContent.innerHTML = `
+                    <div class="image-viewer-container">
+                        <img src="${file.url}" alt="${file.name}">
+                    </div>
+                `;
+            }
+        }
+
+        let videoPlayState = { playing: false, frames: [], fps: 10, currentFrame: 0, timer: null, width: 0, height: 0 };
+
+        function readFourCC(data, offset) {
+            return String.fromCharCode(data[offset], data[offset+1], data[offset+2], data[offset+3]);
+        }
+
+        function readDword(data, offset) {
+            return data[offset] | (data[offset+1] << 8) | (data[offset+2] << 16) | (data[offset+3] << 24);
+        }
+
+        function parseAviFrames(data) {
+            const frames = [];
+            let offset = 0;
+            let fps = 10;
+            let width = 0, height = 0;
+
+            if (readFourCC(data, offset) !== 'RIFF') return { frames, fps, width, height };
+            offset += 8;
+            if (readFourCC(data, offset) !== 'AVI ') return { frames, fps, width, height };
+            offset += 4;
+
+            while (offset < data.byteLength - 8) {
+                const fourcc = readFourCC(data, offset);
+                const size = readDword(data, offset + 4);
+
+                if (fourcc === 'avih') {
+                    const microSecPerFrame = readDword(data, offset + 12);
+                    if (microSecPerFrame > 0) fps = Math.round(1000000 / microSecPerFrame);
+                    width = readDword(data, offset + 32);
+                    height = readDword(data, offset + 36);
+                } else if (fourcc === 'LIST') {
+                    const listType = readFourCC(data, offset + 8);
+                    if (listType === 'movi') {
+                        let moviOffset = offset + 12;
+                        const moviEnd = offset + 8 + size;
+                        while (moviOffset < moviEnd - 8) {
+                            const chunkId = readFourCC(data, moviOffset);
+                            const chunkSize = readDword(data, moviOffset + 4);
+                            if (chunkId === '00dc' && chunkSize > 0) {
+                                frames.push({ offset: moviOffset + 8, size: chunkSize });
+                            }
+                            moviOffset += 8 + chunkSize;
+                            if (chunkSize % 2) moviOffset++;
+                        }
+                        break;
+                    }
+                }
+                offset += 8 + size;
+                if (size % 2) offset++;
+            }
+
+            return { frames, fps, width, height };
+        }
+
+        async function loadAndPlayMjpeg(file) {
+            const canvas = document.getElementById('mjpegCanvas');
+            const ctx = canvas.getContext('2d');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const videoTime = document.getElementById('videoTime');
+            const progress = document.getElementById('videoProgress');
+            const fpsInfo = document.getElementById('videoFpsInfo');
+            const loading = document.getElementById('videoLoading');
+            const controls = document.getElementById('videoControls');
+
+            try {
+                const response = await fetch(file.url);
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+
+                const { frames, fps, width, height } = parseAviFrames(data);
+
+                if (frames.length === 0) {
+                    loading.innerHTML = '<div style="font-size: 3em; margin-bottom: 10px;">⚠️</div><div>无法解析视频文件</div>';
+                    return;
+                }
+
+                videoPlayState.frames = frames;
+                videoPlayState.fps = fps;
+                videoPlayState.width = width;
+                videoPlayState.height = height;
+                videoPlayState.currentFrame = 0;
+                videoPlayState.data = data;
+
+                canvas.width = width || 640;
+                canvas.height = height || 480;
+
+                fpsInfo.textContent = `${frames.length} 帧 @ ${fps}fps`;
+                loading.style.display = 'none';
+                canvas.style.display = 'block';
+                controls.style.display = 'flex';
+
+                const drawFrame = (frameIdx) => {
+                    const frame = frames[frameIdx];
+                    const blob = new Blob([data.slice(frame.offset, frame.offset + frame.size)], { type: 'image/jpeg' });
+                    const url = URL.createObjectURL(blob);
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        URL.revokeObjectURL(url);
+                        const current = Math.floor(frameIdx / fps);
+                        const total = Math.floor(frames.length / fps);
+                        const fmt = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+                        videoTime.textContent = `${fmt(current)} / ${fmt(total)}`;
+                        progress.value = (frameIdx / (frames.length - 1)) * 100;
+                    };
+                    img.src = url;
+                };
+
+                drawFrame(0);
+
+                playPauseBtn.onclick = () => {
+                    videoPlayState.playing = !videoPlayState.playing;
+                    playPauseBtn.textContent = videoPlayState.playing ? '⏸' : '▶';
+                    if (videoPlayState.playing) {
+                        playNextFrame();
+                    } else {
+                        clearTimeout(videoPlayState.timer);
+                    }
+                };
+
+                progress.oninput = () => {
+                    const idx = Math.floor((progress.value / 100) * (frames.length - 1));
+                    videoPlayState.currentFrame = idx;
+                    drawFrame(idx);
+                    if (!videoPlayState.playing) playPauseBtn.textContent = '▶';
+                };
+
+                const playNextFrame = () => {
+                    if (!videoPlayState.playing) return;
+                    drawFrame(videoPlayState.currentFrame);
+                    videoPlayState.currentFrame++;
+                    if (videoPlayState.currentFrame >= frames.length) {
+                        videoPlayState.currentFrame = 0;
+                    }
+                    videoPlayState.timer = setTimeout(playNextFrame, 1000 / fps);
+                };
+
+            } catch (error) {
+                console.error('Failed to load video:', error);
+                loading.innerHTML = '<div style="font-size: 3em; margin-bottom: 10px;">❌</div><div>加载失败</div>';
+            }
+        }
+
+        function closeFileViewer() {
+            const modal = document.getElementById('fileViewerModal');
+            const viewerContent = document.getElementById('viewerContent');
+            videoPlayState.playing = false;
+            if (videoPlayState.timer) clearTimeout(videoPlayState.timer);
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            viewerContent.innerHTML = '';
+        }
+
+        document.getElementById('fileViewerModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFileViewer();
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
             syncTime();
             initStorage();
+            setTimeout(() => {
+                const streamFrame = document.getElementById('streamFrame');
+                if (streamFrame) streamFrame.src = 'http://{{IPv4}}/stream';
+            }, 3000);
         });
     </script>
 </body>

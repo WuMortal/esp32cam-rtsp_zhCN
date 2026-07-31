@@ -146,10 +146,10 @@ String Storage::generateFileName(const char *prefix, const char *extension)
     localtime_r(&tv.tv_sec, &timeinfo);
 
     char buffer[80];
-    snprintf(buffer, sizeof(buffer), "/%s_%04d%02d%02d%02d%02d_%06lu_%lu%s",
+    snprintf(buffer, sizeof(buffer), "/%s_%04d%02d%02d_%02d%02d%02d_%06lu_%lu%s",
              prefix,
              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-             timeinfo.tm_hour, timeinfo.tm_min,
+             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
              (unsigned long)tv.tv_usec,
              (unsigned long)sequence, extension);
     return String(basePath_) + String(buffer);
@@ -285,6 +285,15 @@ void Storage::closeVideoFile()
 {
     if (aviWriter_.isOpen())
     {
+        unsigned long elapsedMs = millis() - videoStartTime_;
+        int frameCount = aviWriter_.getFrameCount();
+        if (elapsedMs > 0 && frameCount > 0) {
+            int realFps = (int)((frameCount * 1000UL) / elapsedMs);
+            log_i("Real recording framerate: %d fps (%d frames in %lu ms)", realFps, frameCount, elapsedMs);
+            if (realFps > 0 && realFps <= 60) {
+                aviWriter_.updateFps(realFps);
+            }
+        }
         aviWriter_.close();
         log_i("Video file closed");
     }
@@ -303,6 +312,113 @@ void Storage::setVideoRecording(bool record)
     }
     else if (!record && recording_)
     {
-        end();
+        closeVideoFile();
+        recording_ = false;
     }
+}
+
+void Storage::listFiles(std::vector<FileInfo> &files)
+{
+    files.clear();
+    if (!mounted_ || !enabled_)
+        return;
+
+    File root = SD_MMC.open(basePath_);
+    if (!root || !root.isDirectory())
+        return;
+
+    File file = root.openNextFile();
+    while (file)
+    {
+        if (!file.isDirectory())
+        {
+            FileInfo info;
+            String fullName = file.name();
+            int lastSlash = fullName.lastIndexOf('/');
+            if (lastSlash >= 0) {
+                info.name = fullName.substring(lastSlash + 1);
+            } else {
+                info.name = fullName;
+            }
+            info.path = String(basePath_) + "/" + info.name;
+            info.size = file.size();
+            info.isVideo = info.name.endsWith(".avi");
+            info.lastWrite = file.getLastWrite();
+            files.push_back(info);
+        }
+        file = root.openNextFile();
+    }
+}
+
+bool Storage::serveFile(const String &path, WebServer &server)
+{
+    if (!mounted_ || !enabled_)
+    {
+        server.send(404, "text/plain", "Storage not available");
+        return false;
+    }
+
+    String cleanPath = path;
+    int queryPos = cleanPath.indexOf('?');
+    if (queryPos >= 0) {
+        cleanPath = cleanPath.substring(0, queryPos);
+    }
+
+    String filePath;
+    if (cleanPath.startsWith("/files/"))
+    {
+        String relativePath = cleanPath.substring(7);
+        filePath = String(basePath_) + "/" + relativePath;
+    }
+    else
+    {
+        filePath = cleanPath;
+    }
+
+    if (!SD_MMC.exists(filePath))
+    {
+        server.send(404, "text/plain", "File not found");
+        return false;
+    }
+
+    File file = SD_MMC.open(filePath, FILE_READ);
+    if (!file)
+    {
+        server.send(500, "text/plain", "Failed to open file");
+        return false;
+    }
+
+    String contentType = "application/octet-stream";
+    if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg"))
+        contentType = "image/jpeg";
+    else if (filePath.endsWith(".avi"))
+        contentType = "video/x-msvideo";
+    else if (filePath.endsWith(".mjpeg"))
+        contentType = "video/x-mjpeg";
+
+    bool download = path.indexOf("download=1") >= 0;
+    server.sendHeader("Cache-Control", "no-cache");
+    if (download) {
+        String filename = filePath.substring(filePath.lastIndexOf('/') + 1);
+        server.sendHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+    }
+    server.setContentLength(file.size());
+    server.send(200, contentType, "");
+
+    const size_t bufSize = 1024;
+    uint8_t buf[bufSize];
+    size_t remaining = file.size();
+    while (remaining > 0 && server.client().connected())
+    {
+        size_t toRead = (remaining < bufSize) ? remaining : bufSize;
+        size_t bytesRead = file.read(buf, toRead);
+        if (bytesRead == 0)
+            break;
+        server.sendContent_P((const char *)buf, bytesRead);
+        remaining -= bytesRead;
+        yield();
+    }
+
+    file.close();
+    return true;
 }

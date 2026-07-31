@@ -19,6 +19,7 @@ public:
     int getWidth() const { return width_; }
     int getHeight() const { return height_; }
     int getFps() const { return fps_; }
+    void updateFps(int realFps);
 
 private:
     File file_;
@@ -29,6 +30,13 @@ private:
     uint32_t moviStart_;
     uint32_t fileSize_;
     std::vector<uint32_t> frameOffsets_;
+    std::vector<uint32_t> frameLengths_;
+
+    uint32_t avihOffset_;
+    uint32_t strhRateOffset_;
+    uint32_t strhLengthOffset_;
+    uint32_t moviSizeOffset_;
+    uint32_t riffSizeOffset_;
 
     void writeDword(uint32_t value);
     void writeWord(uint16_t value);

@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 #include <SD_MMC.h>
+#include <vector>
+#include <WebServer.h>
 #include "avi_writer.h"
 
 class Storage
@@ -50,6 +52,17 @@ public:
     unsigned long getVideoStartTime() const { return videoStartTime_; }
 
     void setVideoParams(int width, int height, int fps) { videoWidth_ = width; videoHeight_ = height; videoFps_ = fps; }
+
+    struct FileInfo {
+        String name;
+        String path;
+        size_t size;
+        bool isVideo;
+        time_t lastWrite;
+    };
+
+    void listFiles(std::vector<FileInfo> &files);
+    bool serveFile(const String &path, WebServer &server);
 
 private:
     bool initialized_;

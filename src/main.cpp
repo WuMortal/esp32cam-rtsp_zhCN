@@ -3,6 +3,7 @@
 #include <soc/rtc_cntl_reg.h>
 #include <driver/i2c.h>
 #include <ESPmDNS.h>
+#include <time.h>
 #include <web_handlers.h>
 #include <app_globals.h>
 
@@ -126,6 +127,40 @@ void update_camera_settings()
   camera->set_vflip(camera, param_vflip.value());
   camera->set_dcw(camera, param_dcw.value());
   camera->set_colorbar(camera, param_colorbar.value());
+
+  framesize_t fs = camera->status.framesize;
+  int w = 640, h = 480;
+  switch (fs)
+  {
+  case FRAMESIZE_QQVGA:  w = 160; h = 120; break;
+  case FRAMESIZE_QCIF:   w = 176; h = 144; break;
+  case FRAMESIZE_HQVGA:  w = 240; h = 176; break;
+  case FRAMESIZE_QVGA:   w = 320; h = 240; break;
+  case FRAMESIZE_CIF:    w = 400; h = 296; break;
+  case FRAMESIZE_HVGA:   w = 480; h = 320; break;
+  case FRAMESIZE_VGA:    w = 640; h = 480; break;
+  case FRAMESIZE_SVGA:   w = 800; h = 600; break;
+  case FRAMESIZE_XGA:    w = 1024; h = 768; break;
+  case FRAMESIZE_HD:     w = 1280; h = 720; break;
+  case FRAMESIZE_SXGA:   w = 1280; h = 1024; break;
+  case FRAMESIZE_UXGA:   w = 1600; h = 1200; break;
+  default: break;
+  }
+  int fps = 1000 / param_frame_duration.value();
+  if (fps < 1) fps = 1;
+  if (fps > 30) fps = 30;
+  bool wasRecording = recordingDesired && (recorder != nullptr);
+  if (wasRecording) {
+    recordingDesired = false;
+    recorder->enqueueControl(false);
+    delay(100);
+  }
+  storage.setVideoParams(w, h, fps);
+  log_i("Updated video recording params: %dx%d @ %dfps", w, h, fps);
+  if (wasRecording) {
+    recordingDesired = true;
+    recorder->enqueueControl(true);
+  }
 }
 
 // ==================== RTSP ====================
@@ -159,6 +194,8 @@ void setup()
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(115200);
   Serial.setDebugOutput(true);
+  setenv("TZ", "CST-8", 1);
+  tzset();
 #ifdef CAMERA_POWER_GPIO
   pinMode(CAMERA_POWER_GPIO, OUTPUT);
   digitalWrite(CAMERA_POWER_GPIO, CAMERA_POWER_ON_LEVEL);

@@ -37,13 +37,22 @@ void registerWebHandlers(WebServer &server, Recorder &recorder)
   srv->on("/api/storage/status", HTTP_GET, handle_storage_status);
   srv->on("/api/storage/snapshot", HTTP_POST, handle_snapshot_save);
   srv->on("/api/storage/video", HTTP_POST, handle_video_control);
+  srv->on("/api/storage/list", HTTP_GET, handle_storage_list);
+  srv->on("/files/", HTTP_GET, handle_storage_files);
   srv->on("/api/time/sync", HTTP_POST, handle_time_sync);
 #ifdef FLASH_LED_GPIO
   srv->on("/flash", HTTP_GET, handle_flash);
 #endif
   srv->on("/restart", HTTP_GET, handle_restart);
   srv->onNotFound([]()
-                  { iotWebConf.handleNotFound(); });
+                  {
+                    if (srv->uri().startsWith("/files/"))
+                    {
+                      handle_storage_files();
+                      return;
+                    }
+                    iotWebConf.handleNotFound();
+                  });
 }
 
 // ==================== helpers ====================
@@ -530,6 +539,52 @@ void handle_video_control()
   {
     srv->send(200, "application/json", "{\"success\":true,\"recording\":" + String(recordingDesired ? "true" : "false") + "}");
   }
+}
+
+void handle_storage_list()
+{
+  log_v("handle_storage_list");
+  srv->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  srv->sendHeader("Content-Type", "application/json");
+
+  if (!storage.isInitialized() || !storage.isEnabled() || !storage.isMounted())
+  {
+    srv->send(200, "application/json", "{\"files\":[]}");
+    return;
+  }
+
+  std::vector<Storage::FileInfo> files;
+  storage.listFiles(files);
+
+  String json = "{\"files\":[";
+  for (size_t i = 0; i < files.size(); i++)
+  {
+    if (i > 0)
+      json += ",";
+    char timeBuf[32];
+    struct tm *timeinfo = localtime(&files[i].lastWrite);
+    if (timeinfo)
+      strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", timeinfo);
+    else
+      strcpy(timeBuf, "Unknown");
+
+    json += "{";
+    json += "\"name\":\"" + files[i].name + "\",";
+    json += "\"size\":" + String(files[i].size) + ",";
+    json += "\"isVideo\":" + String(files[i].isVideo ? "true" : "false") + ",";
+    json += "\"url\":\"/files/" + files[i].name + "\",";
+    json += "\"time\":\"" + String(timeBuf) + "\"";
+    json += "}";
+  }
+  json += "]}";
+
+  srv->send(200, "application/json", json);
+}
+
+void handle_storage_files()
+{
+  log_v("handle_storage_files: %s", srv->uri().c_str());
+  storage.serveFile(srv->uri(), *srv);
 }
 
 // ==================== loop-time helper ====================
